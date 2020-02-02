@@ -16,10 +16,13 @@ func TestRunsSuite(t *testing.T) {
 	// snippet of valid configuration that should be included on the
 	// ChallengeRequest passed as part of the test cases.
 
-	fixture := dns.NewFixture(&customDNSProviderSolver{},
+  //Options from https://github.com/jetstack/cert-manager/blob/master/test/acme/dns/options.go
+	fixture := dns.NewFixture(&DNSMadeEasyProviderSolver{},
 		dns.SetResolvedZone(zone),
 		dns.SetAllowAmbientCredentials(false),
-		dns.SetManifestPath("testdata/my-custom-solver"),
+		dns.SetManifestPath("testdata/dnsmadeeasy"),
+		dns.SetBinariesPath("_out/kubebuilder/bin"),
+    //dns.SetDNSServer("ns1.sandbox.dnsmadeeasy.com:53"),
 	)
 
 	fixture.RunConformance(t)

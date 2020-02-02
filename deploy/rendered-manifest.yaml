@@ -1,0 +1,313 @@
+---
+# Source: cert-manager-dnsmadeeasy/templates/rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cert-manager-dnsmadeeasy
+  namespace: default
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+---
+# Source: cert-manager-dnsmadeeasy/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: cert-manager-dnsmadeeasy
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - "secrets"
+      - "configmaps"
+    verbs:
+      - "get"
+      - "list"
+      - "watch"
+---
+# Source: cert-manager-dnsmadeeasy/templates/rbac.yaml
+# Grant cert-manager permission to validate using our apiserver
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: cert-manager-dnsmadeeasy:domain-solver
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+rules:
+  - apiGroups:
+      - acme.mycompany.com
+    resources:
+      - '*'
+    verbs:
+      - 'create'
+---
+# Source: cert-manager-dnsmadeeasy/templates/rbac.yaml
+# apiserver gets the auth-delegator role to delegate auth decisions to
+# the core apiserver
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-manager-dnsmadeeasy:auth-delegator
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: cert-manager-dnsmadeeasy
+    namespace: default
+---
+# Source: cert-manager-dnsmadeeasy/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-manager-dnsmadeeasy
+  labels:
+    helm.sh/chart: cert-manager-dnsmadeeasy-0.1.0
+    app.kubernetes.io/name: cert-manager-dnsmadeeasy
+    app.kubernetes.io/instance: cert-manager-dnsmadeeasy
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-dnsmadeeasy
+subjects:
+  - kind: ServiceAccount
+    name: cert-manager-dnsmadeeasy
+    namespace: default
+---
+# Source: cert-manager-dnsmadeeasy/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-manager-dnsmadeeasy:domain-solver
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-dnsmadeeasy:domain-solver
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: cert-manager
+    namespace: cert-manager
+---
+# Source: cert-manager-dnsmadeeasy/templates/rbac.yaml
+# Grant the webhook permission to read the ConfigMap containing the Kubernetes
+# apiserver's requestheader-ca-certificate.
+# This ConfigMap is automatically created by the Kubernetes apiserver.
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: cert-manager-dnsmadeeasy:webhook-authentication-reader
+  namespace: kube-system
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: cert-manager-dnsmadeeasy
+    namespace: default
+---
+# Source: cert-manager-dnsmadeeasy/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cert-manager-dnsmadeeasy
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 443
+      targetPort: https
+      protocol: TCP
+      name: https
+  selector:
+    app: cert-manager-dnsmadeeasy
+    release: cert-manager-dnsmadeeasy
+---
+# Source: cert-manager-dnsmadeeasy/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  
+  name: cert-manager-dnsmadeeasy
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+spec:
+  replicas: 
+  selector:
+    matchLabels:
+      app: cert-manager-dnsmadeeasy
+      release: cert-manager-dnsmadeeasy
+  template:
+    metadata:
+      labels:
+        app: cert-manager-dnsmadeeasy
+        release: cert-manager-dnsmadeeasy
+    spec:
+      serviceAccountName: cert-manager-dnsmadeeasy
+      containers:
+        - name: cert-manager-dnsmadeeasy
+          image: "angelnu/cert-manager-webhook-dnsmadeeasy:latest"
+          imagePullPolicy: IfNotPresent
+          args:
+            - --tls-cert-file=/tls/tls.crt
+            - --tls-private-key-file=/tls/tls.key
+          env:
+            - name: GROUP_NAME
+              value: "acme.mycompany.com"
+          ports:
+            - name: https
+              containerPort: 443
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /healthz
+              port: https
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /healthz
+              port: https
+          volumeMounts:
+            - name: certs
+              mountPath: /tls
+              readOnly: true
+          resources:
+            {}
+      volumes:
+        - name: certs
+          secret:
+            secretName: cert-manager-dnsmadeeasy-webhook-tls
+---
+# Source: cert-manager-dnsmadeeasy/templates/apiservice.yaml
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+  name: v1alpha1.acme.mycompany.com
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+  annotations:
+    certmanager.k8s.io/inject-ca-from: "default/cert-manager-dnsmadeeasy-webhook-tls"
+spec:
+  group: acme.mycompany.com
+  groupPriorityMinimum: 1000
+  versionPriority: 15
+  service:
+    name: cert-manager-dnsmadeeasy
+    namespace: default
+  version: v1alpha1
+---
+# Source: cert-manager-dnsmadeeasy/templates/pki.yaml
+# Finally, generate a serving certificate for the webhook to use
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: cert-manager-dnsmadeeasy-webhook-tls
+  namespace: "default"
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+spec:
+  secretName: cert-manager-dnsmadeeasy-webhook-tls
+  duration: 8760h # 1y
+  issuerRef:
+    name: cert-manager-dnsmadeeasy-ca
+  dnsNames:
+  - cert-manager-dnsmadeeasy
+  - cert-manager-dnsmadeeasy.default
+  - cert-manager-dnsmadeeasy.default.svc
+---
+# Source: cert-manager-dnsmadeeasy/templates/pki.yaml
+# Generate a CA Certificate used to sign certificates for the webhook
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: cert-manager-dnsmadeeasy-ca
+  namespace: "default"
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+spec:
+  secretName: cert-manager-dnsmadeeasy-ca
+  duration: 43800h # 5y
+  issuerRef:
+    name: cert-manager-dnsmadeeasy-selfsign
+  commonName: "ca.example-webhook.cert-manager"
+  isCA: true
+---
+# Source: cert-manager-dnsmadeeasy/templates/pki.yaml
+# Create an Issuer that uses the above generated CA certificate to issue certs
+apiVersion: cert-manager.io/v1alpha2
+kind: Issuer
+metadata:
+  name: cert-manager-dnsmadeeasy-ca
+  namespace: "default"
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+spec:
+  ca:
+    secretName: cert-manager-dnsmadeeasy-ca
+---
+# Source: cert-manager-dnsmadeeasy/templates/pki.yaml
+# Create a selfsigned Issuer, in order to create a root CA certificate for
+# signing webhook serving certificates
+apiVersion: cert-manager.io/v1alpha2
+kind: Issuer
+metadata:
+  name: cert-manager-dnsmadeeasy-selfsign
+  namespace: "default"
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+spec:
+  selfSigned: {}
