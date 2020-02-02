@@ -12,6 +12,25 @@ metadata:
     heritage: Helm
 ---
 # Source: cert-manager-dnsmadeeasy/templates/rbac.yaml
+# Grant cert-manager permission to validate using our apiserver
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: cert-manager-dnsmadeeasy:domain-solver
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+rules:
+  - apiGroups:
+      - acme.mycompany.com
+    resources:
+      - '*'
+    verbs:
+      - 'create'
+---
+# Source: cert-manager-dnsmadeeasy/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
@@ -33,23 +52,24 @@ rules:
       - "watch"
 ---
 # Source: cert-manager-dnsmadeeasy/templates/rbac.yaml
-# Grant cert-manager permission to validate using our apiserver
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
 metadata:
-  name: cert-manager-dnsmadeeasy:domain-solver
+  name: cert-manager-dnsmadeeasy
   labels:
-    app: cert-manager-dnsmadeeasy
-    chart: cert-manager-dnsmadeeasy-0.1.0
-    release: cert-manager-dnsmadeeasy
-    heritage: Helm
-rules:
-  - apiGroups:
-      - acme.mycompany.com
-    resources:
-      - '*'
-    verbs:
-      - 'create'
+    helm.sh/chart: cert-manager-dnsmadeeasy-0.1.0
+    app.kubernetes.io/name: cert-manager-dnsmadeeasy
+    app.kubernetes.io/instance: cert-manager-dnsmadeeasy
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-dnsmadeeasy
+subjects:
+  - kind: ServiceAccount
+    name: cert-manager-dnsmadeeasy
+    namespace: default
 ---
 # Source: cert-manager-dnsmadeeasy/templates/rbac.yaml
 # apiserver gets the auth-delegator role to delegate auth decisions to
@@ -70,26 +90,6 @@ roleRef:
 subjects:
   - apiGroup: ""
     kind: ServiceAccount
-    name: cert-manager-dnsmadeeasy
-    namespace: default
----
-# Source: cert-manager-dnsmadeeasy/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: cert-manager-dnsmadeeasy
-  labels:
-    helm.sh/chart: cert-manager-dnsmadeeasy-0.1.0
-    app.kubernetes.io/name: cert-manager-dnsmadeeasy
-    app.kubernetes.io/instance: cert-manager-dnsmadeeasy
-    app.kubernetes.io/version: "1.0"
-    app.kubernetes.io/managed-by: Helm
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cert-manager-dnsmadeeasy
-subjects:
-  - kind: ServiceAccount
     name: cert-manager-dnsmadeeasy
     namespace: default
 ---
@@ -162,7 +162,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  
+
   name: cert-manager-dnsmadeeasy
   labels:
     app: cert-manager-dnsmadeeasy
@@ -170,7 +170,7 @@ metadata:
     release: cert-manager-dnsmadeeasy
     heritage: Helm
 spec:
-  replicas: 
+  replicas:
   selector:
     matchLabels:
       app: cert-manager-dnsmadeeasy
@@ -232,6 +232,7 @@ metadata:
 spec:
   group: acme.mycompany.com
   groupPriorityMinimum: 1000
+  insecureSkipTLSVerify: true
   versionPriority: 15
   service:
     name: cert-manager-dnsmadeeasy
@@ -277,24 +278,8 @@ spec:
   duration: 43800h # 5y
   issuerRef:
     name: cert-manager-dnsmadeeasy-selfsign
-  commonName: "ca.example-webhook.cert-manager"
+  commonName: "ca.cert-manager-dnsmadeeasy.cert-manager"
   isCA: true
----
-# Source: cert-manager-dnsmadeeasy/templates/pki.yaml
-# Create an Issuer that uses the above generated CA certificate to issue certs
-apiVersion: cert-manager.io/v1alpha2
-kind: Issuer
-metadata:
-  name: cert-manager-dnsmadeeasy-ca
-  namespace: "default"
-  labels:
-    app: cert-manager-dnsmadeeasy
-    chart: cert-manager-dnsmadeeasy-0.1.0
-    release: cert-manager-dnsmadeeasy
-    heritage: Helm
-spec:
-  ca:
-    secretName: cert-manager-dnsmadeeasy-ca
 ---
 # Source: cert-manager-dnsmadeeasy/templates/pki.yaml
 # Create a selfsigned Issuer, in order to create a root CA certificate for
@@ -311,3 +296,19 @@ metadata:
     heritage: Helm
 spec:
   selfSigned: {}
+---
+# Source: cert-manager-dnsmadeeasy/templates/pki.yaml
+# Create an Issuer that uses the above generated CA certificate to issue certs
+apiVersion: cert-manager.io/v1alpha2
+kind: Issuer
+metadata:
+  name: cert-manager-dnsmadeeasy-ca
+  namespace: "default"
+  labels:
+    app: cert-manager-dnsmadeeasy
+    chart: cert-manager-dnsmadeeasy-0.1.0
+    release: cert-manager-dnsmadeeasy
+    heritage: Helm
+spec:
+  ca:
+    secretName: cert-manager-dnsmadeeasy-ca
