@@ -1,6 +1,8 @@
 # Cert-manager DNSMadeEasy webhook
 
-Moved to k8s-at-home: https://github.com/k8s-at-home/charts/tree/master/charts/stable/dnsmadeeasy-webhook
+Moved to k8s-at-home:
+- container: https://github.com/k8s-at-home/dnsmadeeasy-webhook
+- helm chart: https://github.com/k8s-at-home/charts/tree/master/charts/stable/dnsmadeeasy-webhook
 
 # Building the code
 
