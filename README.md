@@ -1,6 +1,6 @@
 # Cert-manager DNSMadeEasy webhook
 
-This is WIP - it build and deploys but still has problems with TLS Handshakes.
+Moved to k8s-at-home: https://github.com/k8s-at-home/charts/tree/master/charts/stable/dnsmadeeasy-webhook
 
 # Building the code
 
