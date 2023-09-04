@@ -1,18 +1,34 @@
-IMAGE_NAME := "angelnu/cert-manager-webhook-dnsmadeeasy"
+GO ?= $(shell which go)
+OS ?= $(shell $(GO) env GOOS)
+ARCH ?= $(shell $(GO) env GOARCH)
+
+IMAGE_NAME := "bbetter173/cert-manager-webhook-dnsmadeeasy"
 IMAGE_TAG := "latest"
 
 OUT := $(shell pwd)/_out
 
+KUBE_VERSION=1.25.0
+
 $(shell mkdir -p "$(OUT)")
+export TEST_ASSET_ETCD=_test/kubebuilder/etcd
+export TEST_ASSET_KUBE_APISERVER=_test/kubebuilder/kube-apiserver
+export TEST_ASSET_KUBECTL=_test/kubebuilder/kubectl
 
-_out/kubebuilder/bin/kube-apiserver:
-	./scripts/fetch-test-binaries.sh
+test: _test/kubebuilder
+	$(GO) test -v .
 
-.PHONY: fetch-test-binaries
-fetch-test-binaries: _out/kubebuilder/bin/kube-apiserver
+_test/kubebuilder:
+	curl -fsSL https://go.kubebuilder.io/test-tools/$(KUBE_VERSION)/$(OS)/$(ARCH) -o kubebuilder-tools.tar.gz
+	mkdir -p _test/kubebuilder
+	tar -xvf kubebuilder-tools.tar.gz
+	mv kubebuilder/bin/* _test/kubebuilder/
+	rm kubebuilder-tools.tar.gz
+	rm -R kubebuilder
 
-verify: _out/kubebuilder/bin/kube-apiserver
-	CGO_ENABLED=0 TEST_ZONE_NAME=angelnu.com. go test -v .
+clean: clean-kubebuilder
+
+clean-kubebuilder:
+	rm -Rf _test/kubebuilder
 
 build:
 	docker build -t "$(IMAGE_NAME):$(IMAGE_TAG)" .
@@ -20,10 +36,14 @@ build:
 test:
 	docker build --build-arg SKIP_VERIFY=false -t "$(IMAGE_NAME):$(IMAGE_TAG)" .
 
+.PHONY: verify
+verify: _test/kubebuilder
+       CGO_ENABLED=0 TEST_ZONE_NAME=angelnu.com. go test -v .
+
 .PHONY: rendered-manifest.yaml
 rendered-manifest.yaml:
 	helm template \
 	    --name-template=cert-manager-dnsmadeeasy \
-      --set image.repository=$(IMAGE_NAME) \
-      --set image.tag=$(IMAGE_TAG) \
-      deploy/helm > "deploy/rendered-manifest.yaml"
+            --set image.repository=$(IMAGE_NAME) \
+            --set image.tag=$(IMAGE_TAG) \
+            deploy/example-webhook > "$(OUT)/rendered-manifest.yaml"

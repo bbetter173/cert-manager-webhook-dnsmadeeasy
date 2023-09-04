@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   
   name: {{ include "example-webhook.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     app: {{ include "example-webhook.name" . }}
     chart: {{ include "example-webhook.chart" . }}
