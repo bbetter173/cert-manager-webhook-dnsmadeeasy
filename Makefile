@@ -36,6 +36,10 @@ build:
 test:
 	docker build --build-arg SKIP_VERIFY=false -t "$(IMAGE_NAME):$(IMAGE_TAG)" .
 
+.PHONY: verify
+verify: _test/kubebuilder
+       CGO_ENABLED=0 TEST_ZONE_NAME=angelnu.com. go test -v .
+
 .PHONY: rendered-manifest.yaml
 rendered-manifest.yaml:
 	helm template \

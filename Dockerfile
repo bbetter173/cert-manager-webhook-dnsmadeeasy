@@ -9,8 +9,6 @@ COPY go.sum .
 
 RUN go mod download
 
-RUN make fetch-test-binaries
-
 FROM build_deps AS build
 
 COPY . .
