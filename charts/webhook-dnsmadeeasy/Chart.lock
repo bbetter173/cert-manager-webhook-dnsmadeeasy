@@ -1,0 +1,9 @@
+dependencies:
+- name: common
+  repository: https://library-charts.k8s-at-home.com
+  version: 4.5.2
+- name: cert-manager
+  repository: https://charts.jetstack.io
+  version: v1.8.0
+digest: sha256:ba6cd039d88f672caedbe855b9271b3d8e341c3951ebf967637a8ceb84573ddd
+generated: "2023-09-04T22:36:19.896414+12:00"
