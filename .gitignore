@@ -4,18 +4,19 @@
 *.dll
 *.so
 *.dylib
-
+.idea
 # Test binary, build with `go test -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-#Ignore the downloaded tools
-_out
-
 # Ignore the built binary
 webhook
 
-#Production keys
+# Production keys
 *apikey.yaml
+
+# Make artifacts
+_out
+_test

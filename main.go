@@ -4,19 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-  "strings"
+	"strings"
 
 	"k8s.io/client-go/kubernetes"
+	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/rest"
-  metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-  extAPI "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	extAPI "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 
 	webhookapi "github.com/jetstack/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	webhookcmd "github.com/jetstack/cert-manager/pkg/acme/webhook/cmd"
-  certmgrv1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
-  "github.com/jetstack/cert-manager/pkg/issuer/acme/dns/util"
+	certmgrv1 "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
+	"github.com/jetstack/cert-manager/pkg/issuer/acme/dns/util"
 
-  "github.com/mhenderson-so/godnsmadeeasy/src/GoDNSMadeEasy"
+	"github.com/mhenderson-so/godnsmadeeasy/src/GoDNSMadeEasy"
 )
 
 const (
@@ -42,7 +43,7 @@ func main() {
 
 // customDNSProviderSolver implements the provider-specific logic needed to
 // 'present' an ACME challenge TXT record for your own DNS provider.
-// To do so, it must implement the `github.com/jetstack/cert-manager/pkg/acme/webhook.Solver`
+// To do so, it must implement the `github.com/cert-manager/cert-manager/pkg/acme/webhook.Solver`
 // interface.
 type DNSMadeEasyProviderSolver struct {
 	// If a Kubernetes 'clientset' is needed, you must:

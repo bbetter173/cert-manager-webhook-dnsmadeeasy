@@ -1,9 +1,8 @@
-FROM golang:1.13-alpine AS build_deps
+FROM golang:1.19-alpine AS build_deps
 
 RUN apk add --no-cache git bash curl make
 
 WORKDIR /workspace
-ENV GO111MODULE=on
 
 COPY go.mod .
 COPY go.sum .
